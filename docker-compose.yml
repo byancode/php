@@ -1,0 +1,17 @@
+version: '3.7'
+services:
+  php-swoole:
+    image: byancode/php:swoole
+    build:
+      context: .
+      dockerfile: Dockerfile.swoole
+  php-fpm:
+    image: byancode/php:fpm
+    build:
+      context: .
+      dockerfile: Dockerfile.fpm
+  php:
+    image: byancode/php
+    build:
+      context: .
+      dockerfile: Dockerfile
