@@ -1,4 +1,4 @@
-FROM alpine:3.17
+FROM alpine:3.18
 
 # dependencies required for running "phpize"
 # these get automatically installed and removed by "docker-php-ext-*" (unless they're already installed)
@@ -13,7 +13,7 @@ ENV PHPIZE_DEPS \
 		pkgconf \
 		re2c
 
-ENV PHP_INI_DIR /usr/local/etc/php
+ENV PHP_INI_DIR="/usr/local/etc/php"
 
 # Apply stack smash protection to functions using local buffers and alloca()
 # Make PHP's main executable position-independent (improves ASLR security mechanism, and has no performance impact on x86_64)
@@ -25,14 +25,18 @@ ENV PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_
 ENV PHP_CPPFLAGS="$PHP_CFLAGS"
 ENV PHP_LDFLAGS="-Wl,-O1 -pie"
 
-ARG PHP_VERSION=8.2.2
-ENV PHP_URL="https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz"
+ARG PHP_VERSION=8.2.6
+ENV PHP_URL="https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz" \
+    PHP_BINARY_FILE="/binaries/php-${PHP_VERSION}.tar.xz"
 
-COPY docker-p* /usr/local/bin/
+COPY scripts/docker-* /usr/local/bin/
+COPY binaries/ /binaries/
 
 RUN apk add --no-cache \
 		ca-certificates \
+		supervisor \
 		openssl \
+        nginx \
 		curl \
 		tar \
 		xz \
@@ -46,7 +50,12 @@ RUN apk add --no-cache \
 	mkdir -p /usr/src; \
 	cd /usr/src; \
 	\
-	docker-php-download; \
+    if [ -f "${PHP_BINARY_FILE}" ]; then \
+        cp   ${PHP_BINARY_FILE} /usr/src/php.tar.xz; \
+        rm -Rf /binaries; \
+    else \
+	    docker-php-download; \
+    fi; \
 	\
 	apk del --no-network .fetch-deps; \
     \
@@ -112,7 +121,7 @@ RUN apk add --no-cache \
 		--enable-ctype \
 		--enable-phar \
 		--enable-pdo \
-		--enable-fpm \
+#		--enable-fpm \
 		--enable-intl \
 		--enable-bcmath \
 		--enable-opcache \
@@ -155,7 +164,7 @@ RUN apk add --no-cache \
     pecl update-channels; \
     \
     docker-pecl-install xdebug --zend;  \
-    docker-pecl-install openswoole; \
+    docker-pecl-install swoole; \
     docker-pecl-install redis; \
 	rm -rf /tmp/pear ~/.pearrc; \
     \
@@ -164,6 +173,7 @@ RUN apk add --no-cache \
         sodium \
     ; \
     apk del --no-network .build-deps; \
+    rm -f /usr/src/php.tar.xz; \
 	php --version;
 
 CMD [ "php", "-a" ]
