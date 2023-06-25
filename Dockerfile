@@ -163,7 +163,7 @@ RUN apk add --no-cache \
     \
     pecl update-channels; \
     \
-    docker-pecl-install xdebug --zend;  \
+    # docker-pecl-install xdebug --zend;  \
     docker-pecl-install swoole; \
     docker-pecl-install redis; \
 	rm -rf /tmp/pear ~/.pearrc; \

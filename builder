@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSIONS=('8.1.19' '8.2.6')
+VERSIONS=('8.1.20' '8.2.7')
 
 for VERSION in "${VERSIONS[@]}"; do
     echo "Building PHP ${VERSION}...";
